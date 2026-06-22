@@ -1,0 +1,6 @@
+{
+  "name": "SmartSync Planner",
+  "description": "An intelligent scheduling assistant that connects multiple calendars, emails, and tools into a single, optimized timeline.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
