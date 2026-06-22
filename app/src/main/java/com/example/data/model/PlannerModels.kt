@@ -60,5 +60,10 @@ data class PreferencesEntity(
     val workingHourStart: Int = 9, // 9 AM
     val workingHourEnd: Int = 17, // 5 PM
     val dailySummary: String = "",
-    val learnPreferencesJson: String = "" // Preferred hours or meeting types learned by AI
+    val learnPreferencesJson: String = "", // Preferred hours or meeting types learned by AI
+    val isUserRegistered: Boolean = false,
+    val isLoggedIn: Boolean = false,
+    val userName: String = "",
+    val userEmail: String = "",
+    val userPasswordHex: String = ""
 )

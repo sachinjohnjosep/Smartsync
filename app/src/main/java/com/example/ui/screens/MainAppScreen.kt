@@ -67,7 +67,22 @@ fun MainAppScreen(
         NavigationItem("Settings", Icons.Default.Settings, Icons.Outlined.Settings)
     )
 
-    if (showOnboarding) {
+    val preferences by viewModel.preferences.collectAsState()
+    val isLoggedIn = preferences?.isLoggedIn == true
+    
+    // Custom user initials resolver
+    val userInitials = remember(preferences?.userName) {
+        preferences?.userName?.split(" ")
+            ?.mapNotNull { it.firstOrNull()?.uppercaseChar() }
+            ?.joinToString("")?.take(2) ?: "SS"
+    }
+
+    if (!isLoggedIn) {
+        AuthScreen(
+            viewModel = viewModel,
+            modifier = modifier
+        )
+    } else if (showOnboarding) {
         // --- ONBOARDING FLOW PANEL ---
         OnboardingFlow(
             currentPage = currentOnboardingPage,
@@ -199,7 +214,7 @@ fun MainAppScreen(
                             }
                         },
                         actions = {
-                            // User Quick Profile Mock Avatar matching design HTML (AD, bg #D1E4FF, border white, shadow-sm, text #001D36)
+                            // User Quick Profile Mock Avatar matching design HTML with actual user initials
                             Box(
                                 modifier = Modifier
                                     .padding(end = 16.dp)
@@ -210,7 +225,7 @@ fun MainAppScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "AD",
+                                    text = userInitials,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer

@@ -83,6 +83,72 @@ class SmartSyncViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    // --- ACCORDING TO USER MANIFEST: AUTHENTICATION + PROFILE STATE ---
+    fun registerAccount(name: String, email: String, passwordHex: String) {
+        viewModelScope.launch {
+            val currentPref = preferences.value ?: PreferencesEntity(id = 1)
+            val updatedPref = currentPref.copy(
+                isUserRegistered = true,
+                isLoggedIn = true,
+                userName = name,
+                userEmail = email,
+                userPasswordHex = passwordHex
+            )
+            repository.savePreferences(updatedPref)
+        }
+    }
+
+    fun loginAccount(email: String, passwordHex: String): Boolean {
+        val currentPref = preferences.value
+        if (currentPref != null && currentPref.isUserRegistered && currentPref.userEmail.equals(email, ignoreCase = true) && currentPref.userPasswordHex == passwordHex) {
+            viewModelScope.launch {
+                repository.savePreferences(currentPref.copy(isLoggedIn = true))
+            }
+            return true
+        }
+        return false
+    }
+
+    fun logoutAccount() {
+        viewModelScope.launch {
+            val currentPref = preferences.value ?: PreferencesEntity(id = 1)
+            repository.savePreferences(currentPref.copy(isLoggedIn = false))
+        }
+    }
+
+    // --- SYNC SERVICES ACROSS DEVICES MAPPING ---
+    private val _syncedDevices = MutableStateFlow<List<SyncedDevice>>(
+        listOf(
+            SyncedDevice("This Phone (Pixel)", "Mobile Phone", "Just Now", true, "Android 14 (API 34)"),
+            SyncedDevice("My Work Macbook Pro", "Laptop", "5 mins ago", false, "macOS Sonoma"),
+            SyncedDevice("My iPad Air", "Tablet", "2 hours ago", false, "iPadOS 17")
+        )
+    )
+    val syncedDevices: StateFlow<List<SyncedDevice>> = _syncedDevices.asStateFlow()
+
+    fun generateSyncCode(): String {
+        val chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        val code = (1..6)
+            .map { chars.random() }
+            .joinToString("")
+        return "SS-${code.take(3)}-${code.drop(3)}"
+    }
+
+    fun registerNewDevice(name: String, brand: String, pin: String): Boolean {
+        if (pin.replace("-", "").length != 6) return false
+        val newDevice = SyncedDevice(
+            deviceName = name,
+            deviceType = brand,
+            lastSyncTime = "Sync Connected",
+            isCurrentDevice = false,
+            osVersion = "Pair Link Approved"
+        )
+        val currentList = _syncedDevices.value.toMutableList()
+        currentList.add(newDevice)
+        _syncedDevices.value = currentList
+        return true
+    }
+
     fun deleteEvent(id: Int) {
         viewModelScope.launch {
             repository.deleteEventById(id)
@@ -438,4 +504,12 @@ data class EventProposal(
     val platform: String,
     val participants: String = "",
     val documents: String = ""
+)
+
+data class SyncedDevice(
+    val deviceName: String,
+    val deviceType: String,
+    val lastSyncTime: String,
+    val isCurrentDevice: Boolean = false,
+    val osVersion: String = ""
 )
